@@ -1,115 +1,173 @@
 import cv2
 from ultralytics import YOLO
-import math # Necesario para redondear la confianza
+import math
+import numpy as np
+from PIL import Image, ImageDraw, ImageFont # Importaciones de Pillow
+import os
 
-# Cargar el modelo YOLOv8 pre-entrenado
-# Puedes probar 'yolov8n.pt' (más rápido, menos preciso) o 'yolov8s.pt' (balanceado)
-# El modelo se descargará automáticamente si no existe localmente.
+# --- Configuración ---
+MODEL_NAME = 'yolo11n.pt'
+CONFIDENCE_THRESHOLD = 0.5
+WEBCAM_INDEX = 0
+
+# --- Configuración de Apariencia del Texto y Cajas ---
+FONT_FILENAME = "DejaVuSans.ttf" # ¡Verifica que existe! O usa "arial.ttf", etc.
+FONT_SIZE = 18
+TEXT_PADDING = 4           # Píxeles de padding alrededor del texto
+GAP_BELOW_BOX = 5          # Espacio vertical entre caja de objeto y fondo de texto
+BACKGROUND_COLOR = (0, 255, 0) # Fondo del texto
+TEXT_COLOR = (0, 0, 0)       # Color del texto
+BBOX_COLOR = (0, 255, 0)     # Color del cuadro del objeto
+BBOX_THICKNESS = 2         # Grosor del cuadro del objeto
+# --- Fin Configuración ---
+
+# --- Diccionario de Traducción ELIMINADO ---
+
+# --- Cargar Fuente ---
 try:
-    model = YOLO('yolov8s.pt')
+    font = ImageFont.truetype(FONT_FILENAME, FONT_SIZE)
+    print(f"Fuente '{FONT_FILENAME}' cargada correctamente (tamaño {FONT_SIZE}).")
+except IOError:
+    print(f"Advertencia: No se pudo cargar la fuente TTF '{FONT_FILENAME}'.")
+    print("Intentando cargar fuente por defecto.")
+    try:
+        font = ImageFont.load_default(FONT_SIZE)
+    except AttributeError:
+        font = ImageFont.load_default()
+# --- Fin Carga Fuente ---
+
+# --- Carga del Modelo YOLO ---
+try:
+    print(f"Cargando modelo {MODEL_NAME}...")
+    model = YOLO(MODEL_NAME)
+    # Obtenemos los nombres originales en inglés
+    class_names_en = model.names
+    print("Modelo cargado exitosamente.")
 except Exception as e:
-    print(f"Error al cargar el modelo: {e}")
+    print(f"Error crítico al cargar el modelo YOLO: {e}")
     exit()
+# --- Fin Carga Modelo ---
 
-# Obtener los nombres de las clases del modelo
-class_names = model.names
-# print("Clases detectables:", class_names) # Descomenta si quieres ver todas las clases
-
-# Iniciar la captura de video desde la webcam (usualmente el índice 0)
-cap = cv2.VideoCapture(0)
-
-# Verificar si la webcam se abrió correctamente
+# --- Iniciar Webcam ---
+print(f"Iniciando captura de webcam (índice {WEBCAM_INDEX})...")
+cap = cv2.VideoCapture(WEBCAM_INDEX)
 if not cap.isOpened():
-    print("Error: No se pudo abrir la cámara web.")
+    print(f"Error crítico: No se pudo abrir la cámara web con índice {WEBCAM_INDEX}.")
     exit()
+frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+print(f"Webcam abierta ({frame_width}x{frame_height}). Presiona 'q' para salir.")
+# --- Fin Iniciar Webcam ---
 
-print("Presiona 'q' para salir...")
-
-# Bucle principal para procesar cada frame del video
+# === Bucle Principal ===
 while True:
-    # Leer un frame de la cámara
+    # 1. Leer Frame (OpenCV)
     success, frame = cap.read()
-
-    # Si el frame se leyó correctamente
-    if success:
-        # Realizar la inferencia YOLO en el frame actual
-        # stream=True es más eficiente para video
-        try:
-            results = model(frame, stream=True, verbose=False) # verbose=False para menos mensajes en consola
-        except Exception as e:
-            print(f"Error durante la inferencia: {e}")
-            continue # Saltar al siguiente frame
-
-        # Iterar sobre los resultados (detecciones) en el frame
-        for r in results:
-            boxes = r.boxes # Obtener el objeto Boxes con las detecciones
-
-            # Iterar sobre cada cuadro delimitador detectado
-            if boxes: # Comprobar si hay detecciones
-                for box in boxes:
-                    try:
-                        # --- MÉTODO RECOMENDADO PARA EXTRAER DATOS ---
-                        # 1. Obtener coordenadas del cuadro delimitador como lista de enteros
-                        # box.xyxy es un tensor (ej. tensor([[x1, y1, x2, y2]])),
-                        # accedemos a la primera fila  y convertimos a lista de enteros
-                        xyxy = box.xyxy.int().tolist() # [[x1, y1, x2, y2]] -> [x1, y1, x2, y2]
-                        x1, y1, x2, y2 = xyxy # Desempaquetar la lista
-
-                        # 2. Obtener la confianza de la detección
-                        # box.conf es un tensor (ej. tensor([confianza]))
-                        # Usamos.item() para obtener el valor escalar de Python
-                        confidence = math.ceil((box.conf.item() * 100)) / 100
-
-                        # 3. Obtener el ID de la clase detectada
-                        # box.cls es un tensor (ej. tensor([id_clase]))
-                        # Usamos.item() para obtener el valor escalar y luego convertimos a int
-                        cls_id = int(box.cls.item())
-                        # --- FIN MÉTODO RECOMENDADO ---
-
-                        # 4. Obtener el nombre de la clase
-                        class_name = class_names[cls_id]
-
-                        # 5. (Opcional) Filtrar detecciones con baja confianza
-                        if confidence > 0.5: # Puedes ajustar este umbral (0.0 a 1.0)
-                            # 6. Dibujar el cuadro delimitador en el frame
-                            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2) # Verde, grosor 2
-
-                            # 7. Crear el texto del subtítulo (Nombre Clase: Confianza)
-                            label = f'{class_name}: {confidence:.2f}'
-
-                            # 8. Calcular tamaño del texto para el fondo
-                            (label_width, label_height), baseline = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
-
-                            # 9. Dibujar un fondo rectangular para el texto (con ajuste para borde superior)
-                            text_bg_y1 = max(0, y1 - label_height - 5) # Evita que el fondo salga por arriba
-                            cv2.rectangle(frame, (x1, text_bg_y1), (x1 + label_width, y1), (0, 255, 0), cv2.FILLED)
-
-                            # 10. Dibujar el texto del subtítulo sobre el fondo (con ajuste para borde superior)
-                            text_y = max(label_height + 5, y1 - 5) # Evita que el texto salga por arriba
-                            cv2.putText(frame, label, (x1, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1) # Negro
-
-                    except IndexError:
-                        print("Advertencia: Se encontró un tensor 'box.xyxy' con formato inesperado.")
-                        continue # Saltar esta caja si el formato no es el esperado
-                    except Exception as e:
-                        print(f"Error procesando una caja: {e}")
-                        continue # Saltar esta caja en caso de otro error
-
-        # Mostrar el frame procesado en una ventana
-        cv2.imshow('Detector de Objetos Webcam - YOLOv8', frame)
-
-        # Salir del bucle si se presiona la tecla 'q'
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
-    # Si no se pudo leer el frame (ej. fin del video o error de cámara)
-    else:
-        print("Error al leer el frame de la cámara.")
+    if not success:
+        print("Error al leer el frame de la cámara o fin del stream.")
         break
 
-# Liberar el objeto de captura de video
-cap.release()
-# Cerrar todas las ventanas de OpenCV
-cv2.destroyAllWindows()
+    # 2. Inferencia YOLO
+    try:
+        results = model(frame, stream=True, verbose=False, device=0)
+    except Exception as e:
+        print(f"Error durante la inferencia YOLO: {e}")
+        continue
 
+    # 3. Preparar Lienzo Pillow (Convertir a Pillow RGB)
+    try:
+        pil_img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+        draw = ImageDraw.Draw(pil_img)
+    except Exception as e:
+        print(f"Error al convertir frame a imagen Pillow: {e}")
+        continue
+
+    # 4. Procesar Resultados y Dibujar SOBRE LA IMAGEN PILLOW
+    for r in results:
+        boxes = r.boxes
+        if boxes:
+            for box in boxes:
+                try:
+                    # a. Extraer datos de la caja
+                    coords = box.xyxy.int().tolist()[0]
+                    x1, y1, x2, y2 = coords
+                    confidence = math.ceil((box.conf.item() * 100)) / 100
+                    cls_id = int(box.cls.item())
+
+                    # b. Obtener nombre en inglés y filtrar por confianza
+                    # Ya NO traducimos
+                    class_name_en = class_names_en[cls_id]
+
+                    if confidence >= CONFIDENCE_THRESHOLD:
+
+                        # --- Dibujo TODO con Pillow ---
+                        try:
+                            # c. Dibujar Bounding Box del objeto (Pillow)
+                            draw.rectangle(
+                                [(x1, y1), (x2, y2)],
+                                outline=BBOX_COLOR,
+                                width=BBOX_THICKNESS
+                            )
+
+                            # d. Preparar Etiqueta (Inglés)
+                            label = f'{class_name_en}: {confidence:.2f}' # Usamos class_name_en
+
+                            # e. Calcular tamaño necesario para el texto
+                            text_bbox = draw.textbbox((0, 0), label, font=font)
+                            label_width = text_bbox[2] - text_bbox[0]
+                            label_height = text_bbox[3] - text_bbox[1]
+
+                            # f. Calcular posición DEBAJO de la caja (LÓGICA REVISADA)
+                            bg_y1 = y2 + GAP_BELOW_BOX # El fondo empieza 'gap' píxeles bajo la caja
+                            text_y = bg_y1 + TEXT_PADDING # El texto empieza dentro del padding del fondo
+                            text_x = x1 # Texto alineado a la izquierda
+
+                            # Calcular altura total del fondo (texto + padding superior/inferior)
+                            total_bg_height = label_height + (2 * TEXT_PADDING)
+                            bg_y2 = bg_y1 + total_bg_height
+
+                            # g. Comprobar si cabe verticalmente y dibujar
+                            if bg_y2 < frame_height: # Comprobar borde inferior
+                                # Calcular coordenadas X del fondo CON padding
+                                bg_x1 = max(0, text_x - TEXT_PADDING)
+                                bg_x2 = text_x + label_width + TEXT_PADDING
+
+                                # Dibujar fondo (Pillow)
+                                draw.rectangle(
+                                    [(bg_x1, bg_y1), (bg_x2, bg_y2)],
+                                    fill=BACKGROUND_COLOR
+                                )
+                                # Dibujar texto (Pillow)
+                                draw.text((text_x, text_y), label, font=font, fill=TEXT_COLOR)
+
+                        except Exception as e_draw:
+                             print(f"Error dibujando con Pillow: {e_draw}")
+                        # --- Fin Dibujo Pillow ---
+
+                except Exception as e_box:
+                     print(f"Error procesando una caja específica: {e_box}")
+                     continue
+
+    # 5. Finalizar Dibujo (Convertir de Pillow RGB a OpenCV BGR)
+    try:
+        frame_final = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
+    except Exception as e_conv:
+        print(f"Error al convertir imagen Pillow a frame OpenCV: {e_conv}")
+        frame_final = frame
+
+    # 6. Mostrar Frame Final
+    # Cambiamos el título de la ventana para reflejar que usa inglés
+    cv2.imshow('Object Detector Webcam - YOLOv8 (English Labels)', frame_final)
+
+    # 7. Salir con 'q'
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        print("Saliendo por petición del usuario...")
+        break
+# === Fin Bucle Principal ===
+
+# --- Liberar Recursos ---
+print("Liberando recursos...")
+cap.release()
+cv2.destroyAllWindows()
 print("Aplicación cerrada.")
+# --- Fin Liberar Recursos ---
