@@ -1,13 +1,19 @@
 :root {
-  --bg-color: #0f1115;
-  --panel-bg: rgba(30, 35, 45, 0.7);
-  --primary: #00ff9d;
-  --primary-dim: rgba(0, 255, 157, 0.1);
-  --secondary: #2d8cf0;
+  --bg-color: #050510;
+  --panel-bg: rgba(20, 20, 40, 0.75);
+  /* Brand Neons derived from Logo */
+  --neon-cyan: #00e5ff;
+  --neon-purple: #b94bf8;
+  --neon-pink: #ff00ff;
+
+  --primary: var(--neon-cyan);
+  --secondary: var(--neon-purple);
+  --accent: var(--neon-pink);
+
   --text-main: #ffffff;
-  --text-muted: #9ca3af;
-  --border: rgba(255, 255, 255, 0.1);
-  --glass: blur(12px);
+  --text-muted: #a0a0c0;
+  --border: rgba(185, 75, 248, 0.3);
+  --glass: blur(16px);
 }
 
 body {
@@ -17,10 +23,10 @@ body {
   color: var(--text-main);
   height: 100vh;
   overflow: hidden;
-  background-image: radial-gradient(
-    circle at 50% 0%,
-    #1a2236 0%,
-    var(--bg-color) 60%
+  background: radial-gradient(
+    circle at 50% -20%,
+    #200a40 0%,
+    var(--bg-color) 70%
   );
 }
 
@@ -47,25 +53,45 @@ body {
   margin-bottom: 20px;
 }
 
+.logo {
+  display: flex;
+  align-items: center;
+}
+
+.logo-img {
+  height: 48px;
+  width: 48px;
+  margin-right: 15px;
+  border-radius: 50%;
+  box-shadow: 0 0 15px var(--neon-purple);
+  border: 2px solid var(--neon-cyan);
+}
+
 .logo h1 {
-  font-size: 1.25rem;
+  font-size: 1.4rem;
   margin: 0;
-  font-weight: 600;
+  font-weight: 700;
+  background: linear-gradient(to right, var(--neon-cyan), var(--text-main));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 20px rgba(0, 229, 255, 0.3);
 }
 
 .logo .icon {
-  margin-right: 10px;
-  font-size: 1.5rem;
+  display: none;
 }
 
 .badge {
-  background: var(--primary-dim);
-  color: var(--primary);
-  font-size: 0.75rem;
-  padding: 2px 8px;
-  border-radius: 4px;
+  background: rgba(185, 75, 248, 0.2);
+  color: var(--neon-pink);
+  border: 1px solid var(--neon-pink);
+  font-size: 0.7rem;
+  padding: 3px 8px;
+  border-radius: 12px;
   margin-left: 10px;
   vertical-align: middle;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .branding {
@@ -173,32 +199,73 @@ body {
 }
 
 .task-btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--text-main);
-  padding: 12px;
-  border-radius: 8px;
+  padding: 14px;
+  border-radius: 10px;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 12px;
   font-size: 0.95rem;
-  transition: all 0.2s;
+  font-weight: 500;
+  transition: all 0.3s ease;
   text-align: left;
+  position: relative;
+  overflow: hidden;
 }
 
-.task-btn span {
-  font-size: 1.2rem;
+.task-btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--neon-cyan);
+  opacity: 0;
+  transition: opacity 0.3s;
 }
 
 .task-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 15px rgba(0, 229, 255, 0.1);
 }
 
 .task-btn.active {
-  background: var(--primary-dim);
-  border-color: var(--primary);
-  color: var(--primary);
+  background: rgba(0, 229, 255, 0.1);
+  border-color: var(--neon-cyan);
+  color: var(--neon-cyan);
+  box-shadow: 0 0 20px rgba(0, 229, 255, 0.2);
+}
+
+.task-btn.active::before {
+  opacity: 1;
+}
+
+/* Specific colors */
+#btn-segment.active {
+  border-color: var(--neon-pink);
+  color: var(--neon-pink);
+  background: rgba(255, 0, 255, 0.1);
+  box-shadow: 0 0 20px rgba(255, 0, 255, 0.2);
+}
+
+#btn-segment.active::before {
+  background: var(--neon-pink);
+}
+
+#btn-pose.active {
+  border-color: var(--neon-purple);
+  color: var(--neon-purple);
+  background: rgba(185, 75, 248, 0.1);
+  box-shadow: 0 0 20px rgba(185, 75, 248, 0.2);
+}
+
+#btn-pose.active::before {
+  background: var(--neon-purple);
 }
 
 /* Slider */

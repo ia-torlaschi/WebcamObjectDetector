@@ -1,5 +1,7 @@
 # Webcam Object Detector 🎥
 
+![Webcam Object Detector Banner](web/static/img/banner.png)
+
 ![Python](https://img.shields.io/badge/Python-3.8%2B-blue)
 ![YOLO11](https://img.shields.io/badge/YOLO-v11-green)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
