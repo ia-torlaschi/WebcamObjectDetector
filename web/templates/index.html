@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YOLO11 Web Detector | Torlaschi Consulting</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- Header -->
+      <header class="glass-header">
+        <div class="logo">
+          <span class="icon">👁️</span>
+          <h1>Webcam Object Detector <span class="badge">v2.0</span></h1>
+        </div>
+        <div class="branding">
+          Powered by <strong>Torlaschi Consulting</strong>
+        </div>
+      </header>
+
+      <main class="main-content">
+        <!-- Video Feed -->
+        <div class="video-section">
+          <div class="video-wrapper glass-panel">
+            <img
+              src="{{ url_for('video_feed') }}"
+              alt="YOLO11 Stream"
+              id="video-stream"
+            />
+            <div class="overlay-info">
+              <span id="fps-counter">30 FPS</span>
+              <span id="status-indicator" class="active">LIVE</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Controls Sidebar -->
+        <aside class="controls-section glass-panel">
+          <h2>Control Center</h2>
+
+          <!-- Task Selector -->
+          <div class="control-group">
+            <label>Detection Mode</label>
+            <div class="task-tabs">
+              <button
+                class="task-btn active"
+                onclick="setTask('detect')"
+                id="btn-detect"
+              >
+                <span>🔍</span> Detect
+              </button>
+              <button
+                class="task-btn"
+                onclick="setTask('segment')"
+                id="btn-segment"
+              >
+                <span>✂️</span> Segment
+              </button>
+              <button class="task-btn" onclick="setTask('pose')" id="btn-pose">
+                <span>🤸</span> Pose
+              </button>
+            </div>
+          </div>
+
+          <!-- Confidence Slider -->
+          <div class="control-group">
+            <label for="conf-slider"
+              >Confidence Threshold: <span id="conf-value">0.50</span></label
+            >
+            <input
+              type="range"
+              id="conf-slider"
+              min="0.1"
+              max="1.0"
+              step="0.05"
+              value="0.5"
+              oninput="updateSettings()"
+            />
+          </div>
+
+                <!-- Model Selector -->
+                <div class="control-group">
+                    <label for="model-select">YOLO Model</label>
+                    <select id="model-select" onchange="updateSettings()">
+                        <option value="yolo11n">Nano (Fastest)</option>
+                        <option value="yolo11s">Small (Balanced)</option>
+                        <option value="yolo11m">Medium (High Accuracy)</option>
+                    </select>
+                    <small class="hint">Ensure .pt file exists in root.</small>
+                </div>
+
+                 <!-- Device Info -->
+                 <div class="device-info">
+                    <p>Model Path: <span id="current-model">yolo11n.pt</span></p>
+                    <p>Processing: <span id="current-task">Detection</span></p>
+                </div>
+
+                <!-- Footer / Shutdown -->
+                 <div class="controls-footer" style="margin-top: 20px;">
+                    <button class="shutdown-btn" onclick="shutdownApp()">
+                        🛑 Salir (Shutdown)
+                    </button>
+                 </div>
+        </aside>
+      </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+  </body>
+</html>

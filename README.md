@@ -98,6 +98,15 @@ python main.py --task pose --model yolo11n-pose.pt
 
 ---
 
+### 🌐 Web App (NUEVO v2.0)
+¡Probá la nueva interfaz gráfica premium!
+```bash
+python app.py --device 0
+```
+Abrí tu navegador en **http://localhost:5000** para ver el video y controlar todo desde una interfaz moderna.
+
+---
+
 ## ⚙️ Opciones de Configuración
 
 | Argumento    | Default        | Descripción                                                                                   |
@@ -107,6 +116,10 @@ python main.py --task pose --model yolo11n-pose.pt
 | `--source` | `0`          | Fuente de entrada.`0` para webcam default, `1` para externa, o path a un archivo de video. |
 | `--conf`   | `0.5`        | Umbral de confianza (0.0 - 1.0). Filtra detecciones de baja confianza.                         |
 | `--device` | `cpu`        | Dispositivo de hardware. Usá `0` para GPU o `cpu` para procesador.                        |
+
+> **Nota sobre Modelos**: La Web App v2.0 permite cambiar en caliente entre versiones Nano (n), Small (s) y Medium (m).
+> - **Nano**: CPU / GPUs viejas.
+> - **Small/Medium**: Recomendado para RTX 3060/4060.
 
 **Ejemplo: Corriendo en GPU con alta confianza**
 
@@ -118,12 +131,20 @@ python main.py --task detect --device 0 --conf 0.70
 
 ```text
 WebcamObjectDetector/
+├── app.py               # [NUEVO] Servidor Flask para Web App v2.0
+├── main.py              # CLI Entry point (Legacy)
 ├── src/
+│   ├── camera.py        # [NUEVO] Streaming y gestión de modelos
 │   ├── detector.py      # Lógica YOLO y gestión de hardware
-│   ├── visualizer.py    # Utilidades de dibujado (Pillow/OpenCV)
-│   └── utils.py         # Funciones auxiliares (Fonts, IO)
-├── main.py              # Punto de entrada CLI
-├── requirements.txt     # Dependencias (Congeladas con soporte CUDA)
+│   ├── visualizer.py    # Utilidades de dibujado
+│   └── utils.py         # Helpers
+├── web/                 # [NUEVO] Frontend
+│   ├── templates/
+│   │   └── index.html
+│   └── static/
+│       ├── css/
+│       └── js/
+├── requirements.txt     # Dependencias
 └── README.md            # Documentación
 ```
 
