@@ -1,4 +1,4 @@
-# Entorno Virtual
+﻿# Entorno Virtual
 venv/
 .venv/
 */venv/
@@ -23,3 +23,13 @@ __pycache__/
 *.log
 *.tmp
 *.DS_Store
+# ============================================================
+# Agent Skills (auto-synced by ia-backup — DO NOT COMMIT)
+# Managed by: Sync_Skills_Workspace.ps1
+# ============================================================
+.agents/skills/
+.claude/skills/
+.gemini/skills/
+.copilot/skills/
+.codex/skills/
+.github/skills/
